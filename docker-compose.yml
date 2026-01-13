@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: vtfs-postgres
+    environment:
+      POSTGRES_DB: vtfs
+      POSTGRES_USER: vtfs_user
+      POSTGRES_PASSWORD: vtfs_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Убираем сеть, чтобы PostgreSQL был доступен на localhost
+    # networks:
+    #   - vtfs-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vtfs_user -d vtfs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Приложение запускается локально, не в Docker
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: vtfs-server
+  #   ports:
+  #     - "0.0.0.0:8080:8080"
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/vtfs
+  #     SPRING_DATASOURCE_USERNAME: vtfs_user
+  #     SPRING_DATASOURCE_PASSWORD: vtfs_password
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - vtfs-network
+  #   restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+# Сеть не нужна, так как приложение запускается локально
+# networks:
+#   vtfs-network:
+#     driver: bridge
